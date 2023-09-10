@@ -34,7 +34,7 @@ class Console
         $scanner = new ClassScanner(ClassScanner::TYPE_CLASS);
         $scanner->addNamespace('\\Wind\Console\\Command', __DIR__.'/Command');
 
-        $scanMap = $config->get('commands.scan');
+        $scanMap = $config->get('console.command.scan_ns_paths');
         $scanMap && $scanner->addMap($scanMap);
 
         foreach ($scanner->scan() as $ref) {
