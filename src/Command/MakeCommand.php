@@ -19,16 +19,50 @@ class MakeCommand extends Command
         $this
             ->setName('make:command')
             ->setDescription('Create a console command.')
-            ->addArgument('name', InputArgument::REQUIRED, 'Command name like \'user:info\'')
-            ->addArgument('className', InputArgument::REQUIRED, 'Command class name like \'UserInfoCommand\'?');
+            ->addArgument('name', InputArgument::REQUIRED, 'Command name like user:info')
+            ->addArgument('className', InputArgument::REQUIRED, 'Command class name like UserInfoCommand or App/Command/UserInfoCommand');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $name = $input->getArgument('name');
         $className = $input->getArgument('className');
+         $className = str_replace('\\', '/', $className);
 
-        $filepath = BASE_DIR.'/app/Command/'.$className.'.php';
+        $namespace = '';
+        $baseDir = '';
+
+        $nsPaths = config('console.command.scan_ns_paths');
+
+        if (str_contains($className, '\\')) {
+            foreach ($nsPaths as $ns => $dir) {
+                if (strncmp($ns, $className, strlen($ns)) === 0) {
+                    $namespace = $ns;
+                    $baseDir = $dir;
+                    $className = substr($className, strrpos($className, '\\') + 1);
+                    break;
+                }
+            }
+
+            if (!$baseDir) {
+                $output->writeln("<error>Can't find the namespace path to put $className.</error>");
+                return self::FAILURE;
+            }
+        }
+
+        if (!$baseDir) {
+            if ($nsPaths) {
+                reset($nsPaths);
+                $ns = key($nsPaths);
+                $namespace = $ns;
+                $baseDir = $nsPaths[$ns];
+            } else {
+                $namespace = 'App\Command';
+                $baseDir = BASE_DIR.'/app/Command';
+            }
+        }
+
+        $filepath = $baseDir.'/'.$className.'.php';
 
         if (file_exists($filepath)) {
             $output->writeln("<error>Command file '.$filepath.' is already exists!</>");
@@ -43,7 +77,7 @@ class MakeCommand extends Command
         $code = <<<COMMAND
 <?php
 
-namespace App\Command;
+namespace $namespace;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
