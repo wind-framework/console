@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "wind-framework/wind-framework": "^1.0",
         "symfony/console": "^6.3"
     },
     "autoload": {
