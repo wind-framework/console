@@ -18,15 +18,15 @@ class Console
     {
         WindApplication::start('console');
 
-        $container = WindApplication::getInstance()->container;
+        $app = WindApplication::getInstance();
+        $app->startComponents();
 
-        $application = new Application('Wind Framework Console');
+        $console = new Application('Wind Framework Console');
 
-        $container->set(Application::class, $application);
+        $app->container->set(Application::class, $console);
+        $app->container->call(static::installCommands(...));
 
-        $container->call(static::installCommands(...));
-
-        $application->run();
+        $console->run();
     }
 
     protected static function installCommands(Application $application, Config $config)
